@@ -6,6 +6,7 @@ import {
   logout,
   newUsers,
   searchUser,
+  sendFriendRequest,
 } from '../controllers/user.js';
 import { signleAvatar } from '../middlewares/multer.js';
 import { isAuthenticated } from '../middlewares/auth.js';
@@ -18,5 +19,6 @@ router.use(isAuthenticated);
 router.get('/me', getMyProfile);
 router.get('/logout', logout);
 router.get('/search', searchUser);
+router.put("/send-request",sendFriendRequest)
 
 export default router;
