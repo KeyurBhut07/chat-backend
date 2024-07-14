@@ -19,3 +19,11 @@ export const sendToken = (res, user, code, message) => {
 export const emitEvent = (req, event, users, data) => {
   console.log('Emiting Event', event);
 };
+
+export const getOtherMember = (members,userId) => {
+    return members.find((member)=> member._id.toString() != userId.toString())
+}
+
+export const deleteilesFromCloudinary = async (publicId) => {
+
+}

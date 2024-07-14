@@ -7,3 +7,4 @@ export const multerUpload = multer({
 })
 
 export const signleAvatar = multerUpload.single("avatar")
+export const attachmentMulter = multerUpload.array("files",5)

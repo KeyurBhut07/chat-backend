@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 
 import userRouter from './routes/user.js';
 import chatRouter from './routes/chat.js';
+import { createMessageInChat, createingleChats, groupChat } from './seeders/chats.js';
 
 
 const app = express();

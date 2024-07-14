@@ -13,6 +13,11 @@ const newUsers = async (req, res, next) => {
       url: 'image',
     };
 
+    const exsitsUser = await User.findOne(username);
+    if (exsitsUser) {
+      return next(new ErrorHandler('username already exists', 400));
+    }
+
     const user = await User.create({
       name,
       username,
@@ -61,7 +66,7 @@ const searchUser = catchAsync(async (req, res, next) => {
   const { name } = req.query;
   res.status(200).json({
     success: true,
-    message : name,
+    message: name,
   });
 });
 
