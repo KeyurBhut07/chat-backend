@@ -1,11 +1,16 @@
 import { compare } from 'bcrypt';
 import { User } from '../models/user.js';
-import { cookieOptions, emitEvent, sendToken } from '../utils/features.js';
+import {
+  cookieOptions,
+  emitEvent,
+  getOtherMember,
+  sendToken,
+} from '../utils/features.js';
 import { catchAsync } from '../middlewares/error.js';
 import { ErrorHandler } from '../utils/utility.js';
 import { Chat } from '../models/chat.js';
 import { Request } from '../models/request.js';
-import { NEW_FRIEND_REQUEST } from '../constants/events.js';
+import { NEW_FRIEND_REQUEST, REFETCH_CHAT } from '../constants/events.js';
 
 // create a user and store cookies
 const newUsers = async (req, res, next) => {
@@ -103,7 +108,9 @@ const sendFriendRequest = catchAsync(async (req, res, next) => {
     ],
   });
   if (request) {
-    return next(new ErrorHandler('You have already sent a friend request', 400));
+    return next(
+      new ErrorHandler('You have already sent a friend request', 400)
+    );
   }
   await Request.create({
     sender: req.user,
@@ -116,4 +123,108 @@ const sendFriendRequest = catchAsync(async (req, res, next) => {
   });
 });
 
-export { login, newUsers, getMyProfile, logout, searchUser, sendFriendRequest };
+const acceptFriendRequest = catchAsync(async (req, res, next) => {
+  const { requestId, accept } = req.body;
+  const request = await Request.findById(requestId)
+    .populate('sender', 'name')
+    .populate('reciver', 'name');
+
+  if (!request) {
+    return next(new ErrorHandler('Request not found', 404));
+  }
+  if (request.reciver._id.toString() !== req.user.toString()) {
+    return next(
+      new ErrorHandler('You are not allowed to accept this request', 400)
+    );
+  }
+  if (!accept) {
+    await request.deleteOne();
+    return res.status(200).json({
+      success: true,
+      message: 'Request Declined',
+    });
+  }
+  const members = [request.reciver._id, request.sender._id];
+
+  await Promise.all([
+    Chat.create({
+      members,
+      name: `${request.sender.name}-${request.reciver.name}`,
+    }),
+    request.deleteOne(),
+  ]);
+  emitEvent(req, REFETCH_CHAT, members);
+  res.status(200).json({
+    success: true,
+    message: 'Request Accepted',
+    senderId: request.sender._id,
+  });
+});
+
+const getAllNotifications = catchAsync(async (req, res, next) => {
+  const request = await Request.find({ reciver: req.user }).populate(
+    'sender',
+    'name avatar'
+  );
+
+  const myAllrequest = request.map(({ _id, sender }) => {
+    return {
+      _id,
+      sender: {
+        _id: sender._id,
+        name: sender.name,
+        avatar: sender.avatar.url,
+      },
+    };
+  });
+
+  res.status(200).json({
+    success: true,
+    notifications: myAllrequest,
+  });
+});
+
+const getMyFriend = catchAsync(async (req, res, next) => {
+  const chatId = req.query.chatId;
+  const chats = await Chat.find({
+    members: req.user,
+    groupChat: false,
+  }).populate('members', 'name avatar');
+
+  const friends = chats.map(({ members }) => {
+    const otherUser = getOtherMember(members, req.user);
+    return {
+      _id: otherUser._id,
+      name: otherUser.name,
+      avatar: otherUser.avatar.url,
+    };
+  });
+
+  if (chatId) {
+    const chat = await Chat.findById(chatId).populate('members', 'name avatar');
+    const avilableFriends = friends.filter(
+      (friend) => !chat.members.includes(friend._id)
+    );
+    return res.status(200).json({
+      success: true,
+      friends: avilableFriends,
+    });
+  } else {
+    res.status(200).json({
+      success: true,
+      friends,
+    });
+  }
+});
+
+export {
+  login,
+  newUsers,
+  getMyProfile,
+  logout,
+  searchUser,
+  sendFriendRequest,
+  acceptFriendRequest,
+  getAllNotifications,
+  getMyFriend,
+};

@@ -1,6 +1,9 @@
 import express from 'express';
 const router = express.Router();
 import {
+  acceptFriendRequest,
+  getAllNotifications,
+  getMyFriend,
   getMyProfile,
   login,
   logout,
@@ -20,5 +23,8 @@ router.get('/me', getMyProfile);
 router.get('/logout', logout);
 router.get('/search', searchUser);
 router.put("/send-request",sendFriendRequest)
+router.put("/accept-request",acceptFriendRequest)
+router.get("/notifications",getAllNotifications)
+router.get("/friends",getMyFriend)
 
 export default router;

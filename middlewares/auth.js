@@ -1,4 +1,4 @@
-import  jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { ErrorHandler } from '../utils/utility.js';
 import { catchAsync } from './error.js';
 
@@ -9,9 +9,23 @@ const isAuthenticated = catchAsync(async (req, res, next) => {
       new ErrorHandler('Please login to access this routes...!', 401)
     );
   }
-  const decodeToken = jwt.verify(token,process.env.JWT_SECERET)
-  req.user = decodeToken._id
-  next()
+  const decodeToken = jwt.verify(token, process.env.JWT_SECERET);
+  req.user = decodeToken._id;
+  next();
 });
 
-export { isAuthenticated };
+const isAdmin = catchAsync(async (req, res, next) => {
+  const token = req.cookies['chattu-admin-token'];
+  if (!token) {
+    return next(new ErrorHandler('Only admin can access this routes...!', 401));
+  }
+  const seceretKey = jwt.verify(token, process.env.JWT_SECERET);
+  const adminSecretKey = process.env.ADMIN_SECERET || 'AKChatApp';
+  const isMatch = seceretKey === adminSecretKey;
+  if (!isMatch) {
+    return next(new ErrorHandler('Invalid Admin Secret Key', 401));
+  }
+  next();
+});
+
+export { isAuthenticated, isAdmin };
