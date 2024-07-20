@@ -3,7 +3,9 @@ import { ErrorHandler } from '../utils/utility.js';
 import { catchAsync } from './error.js';
 
 const isAuthenticated = catchAsync(async (req, res, next) => {
-  const token = req.cookies['ak-token'];
+  const token =
+    req.headers.authorization && req.headers.authorization.split(' ')[1];
+
   if (!token) {
     return next(
       new ErrorHandler('Please login to access this routes...!', 401)
@@ -15,7 +17,7 @@ const isAuthenticated = catchAsync(async (req, res, next) => {
 });
 
 const isAdmin = catchAsync(async (req, res, next) => {
-  const token = req.cookies['chattu-admin-token'];
+  const token = req.headers['chattu-admin-token'];
   if (!token) {
     return next(new ErrorHandler('Only admin can access this routes...!', 401));
   }

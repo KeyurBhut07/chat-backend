@@ -5,6 +5,7 @@ import {
   emitEvent,
   getOtherMember,
   sendToken,
+  uploadFilesToCloudinary,
 } from '../utils/features.js';
 import { catchAsync } from '../middlewares/error.js';
 import { ErrorHandler } from '../utils/utility.js';
@@ -13,18 +14,24 @@ import { Request } from '../models/request.js';
 import { NEW_FRIEND_REQUEST, REFETCH_CHAT } from '../constants/events.js';
 
 // create a user and store cookies
-const newUsers = async (req, res, next) => {
+const newUsers = catchAsync(async (req, res, next) => {
   try {
     const { name, username, password, bio } = req.body;
-    const avatar = {
-      public_id: 'hi',
-      url: 'image',
-    };
+
+    if (!req.file) {
+      return next(new ErrorHandler('Please upload file'));
+    }
 
     const exsitsUser = await User.findOne({ username });
     if (exsitsUser) {
       return next(new ErrorHandler('username already exists', 400));
     }
+
+    const result = await uploadFilesToCloudinary([req.file]);
+    const avatar = {
+      public_id: result[0].public_id,
+      url: result[0].url,
+    };
 
     const user = await User.create({
       name,
@@ -37,7 +44,7 @@ const newUsers = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
+});
 
 const login = catchAsync(async (req, res, next) => {
   const { username, password } = req.body;
