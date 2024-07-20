@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { userSocketIDs } from '../app.js';
 
 export const cookieOptions = {
   maxAge: 15 * 24 * 60 * 60 * 1000,
@@ -20,10 +21,12 @@ export const emitEvent = (req, event, users, data) => {
   console.log('Emiting Event', event);
 };
 
-export const getOtherMember = (members,userId) => {
-    return members.find((member)=> member._id.toString() != userId.toString())
-}
+export const getOtherMember = (members, userId) => {
+  return members.find((member) => member._id.toString() != userId.toString());
+};
 
-export const deleteilesFromCloudinary = async (publicId) => {
+export const deleteilesFromCloudinary = async (publicId) => {};
 
-}
+export const getSockets = (users = []) => {
+  return users.map((user) => userSocketIDs.get(user._id).toString());
+};

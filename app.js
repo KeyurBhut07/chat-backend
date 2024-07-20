@@ -10,7 +10,13 @@ import adminRouter from './routes/admin.js';
 //for socket io
 import { Server } from 'socket.io';
 import { createServer } from 'http';
-import { NEW_MESSAGE } from './constants/events.js';
+import { NEW_MESSAGE, NEW_MESSAGE_ALERT } from './constants/events.js';
+import { v4 as uuid } from 'uuid';
+import { getSockets } from './utils/features.js';
+import { Message } from './models/message.js';
+
+// map
+const userSocketIDs = new Map();
 
 const app = express();
 const server = createServer(app);
@@ -32,12 +38,49 @@ app.use('/admin', adminRouter);
 
 // socket coneection
 io.on('connection', (socket) => {
-  console.log('a user connected', socket.id);
-  socket.on(NEW_MESSAGE, (data) => {
-    console.log('new message', data);
+  // tem user
+  const user = {
+    _id: 'asasasa',
+    name: 'Name',
+  };
+  userSocketIDs.set(user._id.toString(), socket.id);
+
+  socket.on(NEW_MESSAGE, async ({ chatId, members, messages }) => {
+    // message for realTime
+    const messageForRealTime = {
+      content: messages,
+      _id: uuid(),
+      sender: {
+        _id: user._id,
+        name: user.name,
+      },
+      chat: chatId,
+      createdAt: new Date().toISOString(),
+    };
+    // message from DB
+    const messageForDB = {
+      content: messages,
+      sender: user._id,
+      chat: chatId,
+    };
+
+    // active user
+    const membersSocket = getSockets(members);
+    io.to(membersSocket).emit(NEW_MESSAGE, {
+      chatId,
+      message: messageForRealTime,
+    });
+    io.to(membersSocket).emit(NEW_MESSAGE_ALERT, { chatId });
+    // save databse
+    try {
+      await Message.create(messageForDB);
+    } catch (error) {
+      console.log('error: ', error);
+    }
   });
+
   socket.on('disconnect', () => {
-    console.log('user disconnected');
+    userSocketIDs.delete(user._id.toString());
   });
 });
 
@@ -46,3 +89,5 @@ app.use(errorMiddleware);
 server.listen(PORT, () => {
   console.log(`Server is running on PORT ${PORT}`);
 });
+
+export { userSocketIDs };
