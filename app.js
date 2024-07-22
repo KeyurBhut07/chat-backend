@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/v1/user', userRouter);
-app.use('/chat', chatRouter);
+app.use('/api/v1/chats', chatRouter);
 app.use('/admin', adminRouter);
 
 // socket coneection
