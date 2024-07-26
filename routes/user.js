@@ -21,7 +21,7 @@ router.post('/login', login);
 router.use(isAuthenticated);
 router.get('/me', getMyProfile);
 router.get('/logout', logout);
-router.get('/search', searchUser);
+router.post('/search', searchUser);
 router.put('/send-request', sendFriendRequest);
 router.put('/accept-request', acceptFriendRequest);
 router.get('/notifications', getAllNotifications);
