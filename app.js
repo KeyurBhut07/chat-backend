@@ -22,7 +22,12 @@ const userSocketIDs = new Map();
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server, {});
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    credentials: true,
+  },
+});
 
 const PORT = process.env.PORT;
 connectDB();
@@ -57,6 +62,7 @@ io.on('connection', (socket) => {
     name: 'Name',
   };
   userSocketIDs.set(user._id.toString(), socket.id);
+  console.log('userSocketIDs: ', userSocketIDs);
 
   socket.on(NEW_MESSAGE, async ({ chatId, members, messages }) => {
     // message for realTime

@@ -26,7 +26,6 @@ const newUsers = catchAsync(async (req, res, next) => {
     if (exsitsUser) {
       return next(new ErrorHandler('username already exists', 400));
     }
-
     const result = await uploadFilesToCloudinary([req.file]);
     const avatar = {
       public_id: result[0].public_id,
@@ -108,16 +107,19 @@ const searchUser = catchAsync(async (req, res, next) => {
 
 const sendFriendRequest = catchAsync(async (req, res, next) => {
   const { userId } = req.body;
+  const senderId = req.user;
+  const receiverId = userId;
+
+  // Find any existing request
   const request = await Request.findOne({
     $or: [
-      { sender: req.user._id, receiver: userId },
-      { sender: userId, receiver: req.user._id },
+      { sender: senderId, reciver: receiverId },
+      { sender: receiverId, reciver: senderId },
     ],
   });
+
   if (request) {
-    return next(
-      new ErrorHandler('You have already sent a friend request', 400)
-    );
+    return next(new ErrorHandler('Request already send', 404));
   }
   await Request.create({
     sender: req.user,
