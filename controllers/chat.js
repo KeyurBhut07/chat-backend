@@ -48,10 +48,10 @@ const getMyChat = catchAsync(async (req, res, next) => {
     'name avatar'
   );
 
-  const transformchat = chats.map(({ id, name, members, groupChat }) => {
+  const transformchat = chats.map(({ _id, name, members, groupChat }) => {
     const otherMember = getOtherMember(members, req.user);
     return {
-      id,
+      _id,
       name: groupChat ? name : otherMember.name,
       members: members.reduce((prev, curr) => {
         if (curr._id != req.user.toString()) {
@@ -264,7 +264,7 @@ const sendattachmentChat = catchAsync(async (req, res, next) => {
 
 // get Chat details
 const getChatDetails = catchAsync(async (req, res, next) => {
-  if (req.body.populate === 'true') {
+  if (req.query.populate === 'true') {
     const chat = await Chat.findById(req.params.id)
       .populate('members', 'name avatar')
       .lean();
@@ -359,7 +359,7 @@ const deleteChat = catchAsync(async (req, res, next) => {
 
 const getMessages = catchAsync(async (req, res, next) => {
   const chatId = req.params.id;
-  const { page = 1, limit = 20 } = req.body;
+  const { page = 1, limit = 10 } = req.body;
   const skip = (page - 1) * limit;
   const [messages, totalMessageCount] = await Promise.all([
     Message.find({ chat: chatId })

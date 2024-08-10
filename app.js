@@ -16,6 +16,7 @@ import { getSockets } from './utils/features.js';
 import { Message } from './models/message.js';
 import cors from 'cors';
 import { v2 as cloudinary } from 'cloudinary';
+import { socketAutheticater } from './middlewares/auth.js';
 
 // map
 const userSocketIDs = new Map();
@@ -54,20 +55,36 @@ app.use('/api/v1/user', userRouter);
 app.use('/api/v1/chats', chatRouter);
 app.use('/admin', adminRouter);
 
+// socket io middleware
+io.use(async (socket, next) => {
+  try {
+    // Extract the token from the authorization header
+    const token =
+      socket.request.headers.authorization &&
+      socket.request.headers.authorization.split(' ')[1];
+    if (!token) {
+      return next(new Error('Please login to access this route!', 401));
+    }
+    // Call the socketAuthenticator function
+    await socketAutheticater(token, socket, next);
+  } catch (error) {
+    console.log('error: ', error);
+    return next(new Error('Authentication error', 401));
+  }
+});
+
 // socket coneection
 io.on('connection', (socket) => {
   // tem user
-  const user = {
-    _id: 'asasasa',
-    name: 'Name',
-  };
+  const user = socket.user;
   userSocketIDs.set(user._id.toString(), socket.id);
   console.log('userSocketIDs: ', userSocketIDs);
 
-  socket.on(NEW_MESSAGE, async ({ chatId, members, messages }) => {
+  // mwssage event
+  socket.on(NEW_MESSAGE, async ({ chatId, members, message }) => {
     // message for realTime
     const messageForRealTime = {
-      content: messages,
+      content: message,
       _id: uuid(),
       sender: {
         _id: user._id,
@@ -78,7 +95,7 @@ io.on('connection', (socket) => {
     };
     // message from DB
     const messageForDB = {
-      content: messages,
+      content: message,
       sender: user._id,
       chat: chatId,
     };

@@ -31,7 +31,7 @@ router.delete('/leave/:id', leaveGroup);
 router.post('/message', attachmentMulter, sendattachmentChat);
 
 // get chat message
-router.get("/message/:id", getMessages)
+router.post('/message/:id', getMessages);
 
 // Get Chat Deatils , rename , delete
 router.route('/:id').get(getChatDetails).put(renameGroup).delete(deleteChat);
