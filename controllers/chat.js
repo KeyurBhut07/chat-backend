@@ -4,11 +4,13 @@ import {
   deleteilesFromCloudinary,
   emitEvent,
   getOtherMember,
+  uploadFilesToCloudinary,
 } from '../utils/features.js';
 import { ErrorHandler } from '../utils/utility.js';
 import {
   ALERT,
   NEW_ATTACHMENT,
+  NEW_MESSAGE,
   NEW_MESSAGE_ALERT,
   REFETCH_CHAT,
 } from '../constants/events.js';
@@ -232,7 +234,7 @@ const sendattachmentChat = catchAsync(async (req, res, next) => {
   }
 
   // upload files in cloudnary
-  const attachments = [];
+  const attachments = await uploadFilesToCloudinary(files);
   const messageForDB = {
     content: '',
     attachments,
@@ -249,7 +251,7 @@ const sendattachmentChat = catchAsync(async (req, res, next) => {
 
   const message = await Message.create(messageForDB);
 
-  emitEvent(req, NEW_ATTACHMENT, chat.members, {
+  emitEvent(req, NEW_MESSAGE, chat.members, {
     message: messageForrealTime,
     chatId,
   });

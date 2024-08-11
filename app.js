@@ -30,6 +30,9 @@ const io = new Server(server, {
   },
 });
 
+// instance set in app
+app.set('io', io);
+
 const PORT = process.env.PORT;
 connectDB();
 cloudinary.config({

@@ -23,6 +23,9 @@ export const sendToken = (res, user, code, message) => {
 };
 
 export const emitEvent = (req, event, users, data) => {
+  let io = req.app.get('io');
+  const usersSocket = getSockets(users);
+  io.to(usersSocket).emit(event, data);
   console.log('Emiting Event', event);
 };
 
