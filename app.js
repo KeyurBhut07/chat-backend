@@ -134,6 +134,7 @@ io.on('connection', (socket) => {
 
   // stop typing
   socket.on(STOP_TYPING, ({ members, chatId }) => {
+    console.log('chatId: ', chatId);
     const membersSockets = getSockets(members);
     socket.to(membersSockets).emit(STOP_TYPING, { chatId });
   });
