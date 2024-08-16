@@ -66,5 +66,5 @@ export const uploadFilesToCloudinary = async (files = []) => {
 export const deleteilesFromCloudinary = async (publicId) => {};
 
 export const getSockets = (users = []) => {
-  return users.map((user) => userSocketIDs.get(user._id.toString()));
+  return users.map((user) => userSocketIDs.get(user._id));
 };

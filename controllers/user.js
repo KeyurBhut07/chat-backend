@@ -122,9 +122,10 @@ const sendFriendRequest = catchAsync(async (req, res, next) => {
     return next(new ErrorHandler('Request already send', 404));
   }
   await Request.create({
-    sender: req.user,
+    sender: req.user.toString(),
     reciver: userId,
   });
+
   emitEvent(req, NEW_FRIEND_REQUEST, [userId]);
   res.status(200).json({
     success: true,

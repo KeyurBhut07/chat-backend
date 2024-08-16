@@ -10,7 +10,12 @@ import adminRouter from './routes/admin.js';
 //for socket io
 import { Server } from 'socket.io';
 import { createServer } from 'http';
-import { NEW_MESSAGE, NEW_MESSAGE_ALERT } from './constants/events.js';
+import {
+  NEW_MESSAGE,
+  NEW_MESSAGE_ALERT,
+  START_TYPING,
+  STOP_TYPING,
+} from './constants/events.js';
 import { v4 as uuid } from 'uuid';
 import { getSockets } from './utils/features.js';
 import { Message } from './models/message.js';
@@ -25,7 +30,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: 'http://127.0.0.1:5173',
     credentials: true,
   },
 });
@@ -43,9 +48,10 @@ cloudinary.config({
 
 app.use(express.json());
 app.use(cookieParser());
+
 app.use(
   cors({
-    origin: '*',
+    origin: 'http://127.0.0.1:5173',
     credentials: true,
   })
 );
@@ -105,10 +111,12 @@ io.on('connection', (socket) => {
 
     // active user
     const membersSocket = getSockets(members);
+
     io.to(membersSocket).emit(NEW_MESSAGE, {
       chatId,
       message: messageForRealTime,
     });
+
     io.to(membersSocket).emit(NEW_MESSAGE_ALERT, { chatId });
     // save databse
     try {
@@ -116,6 +124,18 @@ io.on('connection', (socket) => {
     } catch (error) {
       console.log('error: ', error);
     }
+  });
+
+  // start typing
+  socket.on(START_TYPING, ({ members, chatId }) => {
+    const membersSockets = getSockets(members);
+    socket.to(membersSockets).emit(START_TYPING, { chatId });
+  });
+
+  // stop typing
+  socket.on(STOP_TYPING, ({ members, chatId }) => {
+    const membersSockets = getSockets(members);
+    socket.to(membersSockets).emit(STOP_TYPING, { chatId });
   });
 
   socket.on('disconnect', () => {
